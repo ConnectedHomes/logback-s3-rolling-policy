@@ -73,7 +73,7 @@ public class IdentifierUtil {
 
             final String body = new String(baos.toByteArray(), encoding);
 
-            if (body.trim().length() > 0) {
+            if (!body.trim().isEmpty()) {
                 return body.trim();
             }
         } catch (Exception e) {

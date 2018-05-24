@@ -13,6 +13,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -24,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
+    private static final Logger log = LoggerFactory.getLogger(AmazonS3ClientImpl.class);
 
     private final String awsAccessKey;
     private final String awsSecretKey;
@@ -67,7 +70,7 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
             if (getAwsAccessKey() == null || getAwsAccessKey().trim().isEmpty()) {
                 amazonS3Client = new AmazonS3Client();
             } else {
-                AWSCredentials cred = new BasicAWSCredentials(getAwsAccessKey(), getAwsSecretKey());
+                final AWSCredentials cred = new BasicAWSCredentials(getAwsAccessKey(), getAwsSecretKey());
                 amazonS3Client = new AmazonS3Client(cred);
             }
         }
@@ -82,40 +85,37 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
         //Build S3 path
         final StringBuffer s3ObjectName = new StringBuffer();
         if (getS3FolderName() != null) {
-            s3ObjectName.append(format(getS3FolderName(), date)).append("/");
+            s3ObjectName.append(format(getS3FolderName(), date)).append('/');
         }
 
         //Extra custom S3 (runtime) folder?
         if (CustomData.EXTRA_S3_FOLDER.get() != null) {
-            s3ObjectName.append(CustomData.EXTRA_S3_FOLDER.get()).append("/");
+            s3ObjectName.append(CustomData.EXTRA_S3_FOLDER.get()).append('/');
         }
 
         //Add timestamp prefix if desired
         if (prefixTimestamp || overrideTimestampSetting) {
-            s3ObjectName.append(new SimpleDateFormat("yyyyMMdd_HHmmss").format(date)).append("_");
+            s3ObjectName.append(new SimpleDateFormat("yyyyMMdd_HHmmss").format(date)).append('_');
         }
 
         //Add identifier prefix if desired
         if (prefixIdentifier) {
-            s3ObjectName.append(identifier).append("_");
+            s3ObjectName.append(identifier).append('_');
         }
 
         s3ObjectName.append(file.getName());
 
-        //Queue thread to upload
-        Runnable uploader = new Runnable() {
+        // Queue thread to upload
+        final Runnable uploader = () -> {
 
-            @Override
-            public void run() {
-
-                try {
-                    amazonS3Client.putObject(
-                            new PutObjectRequest(getS3BucketName(), s3ObjectName.toString(), file)
-                                    .withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
-                    );
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+            try {
+                amazonS3Client.putObject(
+                        new PutObjectRequest(getS3BucketName(), s3ObjectName.toString(), file)
+                                .withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
+                );
+            } catch (final Exception ex) {
+                log.warn("Cannot put request to queue");
+                ex.printStackTrace();
             }
         };
 
@@ -133,7 +133,6 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
             executor.shutdown();
             executor.awaitTermination(10, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
-
             executor.shutdownNow();
         }
     }
@@ -145,10 +144,10 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
         String result = s;
 
         while (matcher.find()) {
-            String match = matcher.group(1);
+            final String match = matcher.group(1);
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(match);
-            String replace = simpleDateFormat.format(date);
+            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(match);
+            final String replace = simpleDateFormat.format(date);
 
             result = s.replace(String.format("%%d{%s}", match), replace);
         }

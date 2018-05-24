@@ -33,13 +33,15 @@
         <javax-servlet.version>2.4</javax-servlet.version>
         <google-guava.version>18.0</google-guava.version>
         <jetbrains-annotations.version>15.0</jetbrains-annotations.version>
+        <slf4j.version>1.7.21</slf4j.version>
     </properties>
 
     <dependencies>
 
+
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
+            <groupId> com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
             <version>${aws-java-sdk.version}</version>
         </dependency>
 
@@ -57,7 +59,7 @@
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
+            <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
         </dependency>
 
@@ -79,6 +81,24 @@
             <artifactId>annotations</artifactId>
             <version>${jetbrains-annotations.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
 
     </dependencies>

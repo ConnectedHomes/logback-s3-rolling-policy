@@ -10,6 +10,8 @@ import ch.qos.logback.core.rolling.aws.AmazonS3ClientImpl;
 import ch.qos.logback.core.rolling.shutdown.RollingPolicyShutdownListener;
 import ch.qos.logback.core.rolling.shutdown.ShutdownHookType;
 import ch.qos.logback.core.rolling.shutdown.ShutdownHookUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Date;
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> implements RollingPolicyShutdownListener {
+    private static final Logger log = LoggerFactory.getLogger(S3TimeBasedRollingPolicy.class);
 
     private String awsAccessKey;
     private String awsSecretKey;
@@ -89,7 +92,7 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
         Date lastPeriod = ((TimeBasedFileNamingAndTriggeringPolicyBase<E>) timeBasedFileNamingAndTriggeringPolicy).dateInCurrentPeriod;
 
         if (getParentsRawFileProperty() != null) {
-            File file = new File(getParentsRawFileProperty());
+            final File file = new File(getParentsRawFileProperty());
 
             if (file.exists() && file.canRead()) {
                 lastPeriod = new Date(file.lastModified());
@@ -171,8 +174,8 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
                 waitForAsynchronousJobToStop(compressionFuture, "compression");
                 waitForAsynchronousJobToStop(cleanUpFuture, "clean-up");
                 s3Client.uploadFileToS3Async(elapsedPeriodsFileName, date);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (final Exception ex) {
+                log.warn("Cannot upload file to S3", ex);
             }
         }
     }
