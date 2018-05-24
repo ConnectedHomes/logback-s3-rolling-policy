@@ -11,16 +11,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.UUID;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 public class IdentifierUtil {
 
     private IdentifierUtil() {
         throw new IllegalStateException("Not implemented");
     }
 
-    @NotNull
     public static String getIdentifier() {
 
         String identifier;
@@ -52,7 +48,6 @@ public class IdentifierUtil {
         return UUID.randomUUID().toString();
     }
 
-    @Nullable
     public static String getContentOfWebpage(final String location) {
 
         try {
@@ -83,7 +78,6 @@ public class IdentifierUtil {
         return null;
     }
 
-    @Nullable
     public static String getHostname() {
         try {
             String hostname = InetAddress.getLocalHost().getHostAddress();

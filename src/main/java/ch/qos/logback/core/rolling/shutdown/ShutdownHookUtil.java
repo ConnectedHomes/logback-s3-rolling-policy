@@ -5,7 +5,6 @@
 
 package ch.qos.logback.core.rolling.shutdown;
 
-import org.jetbrains.annotations.NotNull;
 
 public class ShutdownHookUtil {
 
@@ -13,7 +12,7 @@ public class ShutdownHookUtil {
         throw new IllegalStateException("Not implemented");
     }
 
-    public static void registerShutdownHook(final @NotNull RollingPolicyShutdownListener listener, @NotNull final ShutdownHookType shutdownHookType) {
+    public static void registerShutdownHook(final RollingPolicyShutdownListener listener, final ShutdownHookType shutdownHookType) {
         switch (shutdownHookType) {
             case SERVLET_CONTEXT:
                 RollingPolicyContextListener.registerShutdownListener(listener);
