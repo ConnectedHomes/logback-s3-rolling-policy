@@ -13,7 +13,6 @@
     <!-- PROJECT METADATA -->
     <groupId>ch.qos.logback</groupId>
     <artifactId>logback-s3-rolling-policy</artifactId>
-    <packaging>pom</packaging>
     <name>Logback RollingPolicy with S3 upload</name>
     <version>GIT-SNAPSHOT</version>
 
