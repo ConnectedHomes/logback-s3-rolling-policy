@@ -59,7 +59,7 @@ If you're using the shutdown hook `SERVLET_CONTEXT` as defined above, you'll nee
 
 As of version `1.3` you can set run-time variables. For now you can only add an extra S3 folder.
 
-Just use `CustomData.extraS3Folder.set( "extra_folder_name" );` somewhere in your code before the upload occurs. You can always change this value during run-time and it will be picked up on the next upload. set to `null` to ignore.
+Just use `CustomData.extraS3Folder.set("extra_folder_name");` somewhere in your code before the upload occurs. You can always change this value during run-time and it will be picked up on the next upload. set to `null` to ignore.
 
 ### logback.xml rolling policy examples
 

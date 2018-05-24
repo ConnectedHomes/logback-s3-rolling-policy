@@ -1,18 +1,7 @@
-/*
- * Copyright 2016 linkID Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Copyright (C) 2013 AlertMe.com Ltd
  */
+
 
 package ch.qos.logback.core.rolling;
 
@@ -36,7 +25,6 @@ public class S3FixedWindowRollingPolicy extends FixedWindowRollingPolicy impleme
     private AmazonS3ClientImpl s3Client;
 
     public S3FixedWindowRollingPolicy() {
-
         super();
 
         rolloverOnExit = false;
@@ -51,16 +39,15 @@ public class S3FixedWindowRollingPolicy extends FixedWindowRollingPolicy impleme
         super.start();
 
         //Init S3 client
-        s3Client = new AmazonS3ClientImpl( getAwsAccessKey(), getAwsSecretKey(), getS3BucketName(), getS3FolderName(), isPrefixTimestamp(),
-                isPrefixIdentifier() );
+        s3Client = new AmazonS3ClientImpl(getAwsAccessKey(), getAwsSecretKey(), getS3BucketName(), getS3FolderName(), isPrefixTimestamp(),
+                isPrefixIdentifier());
 
         if (isPrefixIdentifier()) {
-
-            addInfo( "Using identifier prefix \"" + s3Client.getIdentifier() + "\"" );
+            addInfo("Using identifier prefix \"" + s3Client.getIdentifier() + "\"");
         }
 
         //Register shutdown hook so the log gets uploaded on shutdown, if needed
-        ShutdownHookUtil.registerShutdownHook( this, getShutdownHookType() );
+        ShutdownHookUtil.registerShutdownHook(this, getShutdownHookType());
     }
 
     @Override
@@ -70,7 +57,7 @@ public class S3FixedWindowRollingPolicy extends FixedWindowRollingPolicy impleme
         super.rollover();
 
         //Upload the current log file into S3
-        s3Client.uploadFileToS3Async( fileNamePattern.convertInt( getMinIndex() ), new Date() );
+        s3Client.uploadFileToS3Async(fileNamePattern.convertInt(getMinIndex()), new Date());
     }
 
     /**
@@ -78,7 +65,6 @@ public class S3FixedWindowRollingPolicy extends FixedWindowRollingPolicy impleme
      */
     @Override
     public void doShutdown() {
-
         if (isRolloverOnExit()) {
 
             //Do rolling and upload the rolled file on exit
@@ -86,7 +72,7 @@ public class S3FixedWindowRollingPolicy extends FixedWindowRollingPolicy impleme
         } else {
 
             //Upload the active log file without rolling
-            s3Client.uploadFileToS3Async( getActiveFileName(), new Date(), true );
+            s3Client.uploadFileToS3Async(getActiveFileName(), new Date(), true);
         }
 
         //Wait until finishing the upload
@@ -94,82 +80,66 @@ public class S3FixedWindowRollingPolicy extends FixedWindowRollingPolicy impleme
     }
 
     public String getAwsAccessKey() {
-
         return awsAccessKey;
     }
 
-    public void setAwsAccessKey(String awsAccessKey) {
-
+    public void setAwsAccessKey(final String awsAccessKey) {
         this.awsAccessKey = awsAccessKey;
     }
 
     public String getAwsSecretKey() {
-
         return awsSecretKey;
     }
 
-    public void setAwsSecretKey(String awsSecretKey) {
-
+    public void setAwsSecretKey(final String awsSecretKey) {
         this.awsSecretKey = awsSecretKey;
     }
 
     public String getS3BucketName() {
-
         return s3BucketName;
     }
 
-    public void setS3BucketName(String s3BucketName) {
-
+    public void setS3BucketName(final String s3BucketName) {
         this.s3BucketName = s3BucketName;
     }
 
     public String getS3FolderName() {
-
         return s3FolderName;
     }
 
-    public void setS3FolderName(String s3FolderName) {
-
+    public void setS3FolderName(final String s3FolderName) {
         this.s3FolderName = s3FolderName;
     }
 
     public boolean isRolloverOnExit() {
-
         return rolloverOnExit;
     }
 
-    public void setRolloverOnExit(boolean rolloverOnExit) {
-
+    public void setRolloverOnExit(final boolean rolloverOnExit) {
         this.rolloverOnExit = rolloverOnExit;
     }
 
     public ShutdownHookType getShutdownHookType() {
-
-        return shutdownHookType;
+        return shutdownHookType == null ? ShutdownHookType.NONE : shutdownHookType;
     }
 
-    public void setShutdownHookType(ShutdownHookType shutdownHookType) {
-
+    public void setShutdownHookType(final ShutdownHookType shutdownHookType) {
         this.shutdownHookType = shutdownHookType;
     }
 
     public boolean isPrefixTimestamp() {
-
         return prefixTimestamp;
     }
 
-    public void setPrefixTimestamp(boolean prefixTimestamp) {
-
+    public void setPrefixTimestamp(final boolean prefixTimestamp) {
         this.prefixTimestamp = prefixTimestamp;
     }
 
     public boolean isPrefixIdentifier() {
-
         return prefixIdentifier;
     }
 
-    public void setPrefixIdentifier(boolean prefixIdentifier) {
-
+    public void setPrefixIdentifier(final boolean prefixIdentifier) {
         this.prefixIdentifier = prefixIdentifier;
     }
 }

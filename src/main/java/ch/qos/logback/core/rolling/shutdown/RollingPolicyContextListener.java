@@ -1,18 +1,7 @@
-/*
- * Copyright 2016 linkID Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Copyright (C) 2013 AlertMe.com Ltd
  */
+
 
 package ch.qos.logback.core.rolling.shutdown;
 
@@ -23,12 +12,7 @@ import javax.servlet.ServletContextListener;
 
 public class RollingPolicyContextListener implements ServletContextListener {
 
-    private static final List<RollingPolicyShutdownListener> listeners;
-
-    static {
-
-        listeners = Lists.newArrayList();
-    }
+    private static final List<RollingPolicyShutdownListener> LISTENERS = Lists.newArrayList();
 
     /**
      * Registers a new shutdown hook.
@@ -36,10 +20,8 @@ public class RollingPolicyContextListener implements ServletContextListener {
      * @param listener The shutdown hook to register.
      */
     public static void registerShutdownListener(final RollingPolicyShutdownListener listener) {
-
-        if (!listeners.contains( listener )) {
-
-            listeners.add( listener );
+        if (!LISTENERS.contains(listener)) {
+            LISTENERS.add(listener);
         }
     }
 
@@ -49,25 +31,19 @@ public class RollingPolicyContextListener implements ServletContextListener {
      * @param listener The shutdown hook to deregister.
      */
     public static void deregisterShutdownListener(final RollingPolicyShutdownListener listener) {
-
-        if (listeners.contains( listener )) {
-
-            listeners.remove( listener );
-        }
+        LISTENERS.remove(listener);
     }
 
     @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
-
+    public void contextInitialized(final ServletContextEvent servletContextEvent) {
         //Empty
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+    public void contextDestroyed(final ServletContextEvent servletContextEvent) {
 
         //Upload
-        for (RollingPolicyShutdownListener listener : listeners) {
-
+        for (final RollingPolicyShutdownListener listener : LISTENERS) {
             listener.doShutdown();
         }
     }
