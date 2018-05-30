@@ -130,15 +130,15 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
         s3Client.doShutdown();
     }
 
-    private void waitForAsynchronousJobToStop(final Future<?> aFuture) {
+    private void waitForAsynchronousJobToStop(final Future<?> aFuture, final String jobDescription) {
 
-        if (aFuture != null && !aFuture.isCancelled() && !aFuture.isDone()) {
+        if (aFuture != null) {
             try {
                 aFuture.get(CoreConstants.SECONDS_TO_WAIT_FOR_COMPRESSION_JOBS, TimeUnit.SECONDS);
             } catch (TimeoutException e) {
-                addError("Timeout while waiting for compression job to finish", e);
+                addError("Timeout while waiting for " + jobDescription + " job to finish", e);
             } catch (Exception e) {
-                addError("Unexpected exception while waiting for compression job to finish", e);
+                addError("Unexpected exception while waiting for " + jobDescription + " job to finish", e);
             }
         }
 
@@ -171,7 +171,8 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
         public void run() {
 
             try {
-                waitForAsynchronousJobToStop(future);
+                waitForAsynchronousJobToStop(compressionFuture, "compression");
+                waitForAsynchronousJobToStop(cleanUpFuture, "clean-up");
                 s3Client.uploadFileToS3Async(elapsedPeriodsFileName, date);
             } catch (final Exception ex) {
                 log.warn("Cannot upload file to S3", ex);
