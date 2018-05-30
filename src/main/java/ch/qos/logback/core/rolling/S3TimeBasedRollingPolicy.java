@@ -10,10 +10,12 @@ import ch.qos.logback.core.rolling.aws.AmazonS3ClientImpl;
 import ch.qos.logback.core.rolling.shutdown.RollingPolicyShutdownListener;
 import ch.qos.logback.core.rolling.shutdown.ShutdownHookType;
 import ch.qos.logback.core.rolling.shutdown.ShutdownHookUtil;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.annotation.Retention;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,6 +34,7 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
     private boolean rolloverOnExit;
     private boolean prefixTimestamp;
     private boolean prefixIdentifier;
+    private boolean monthlyFolderRetentionPolicy;
 
     private AmazonS3ClientImpl s3Client;
     private final ExecutorService executor;
@@ -242,5 +245,14 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
 
     public void setPrefixIdentifier(final boolean prefixIdentifier) {
         this.prefixIdentifier = prefixIdentifier;
+    }
+
+
+    public boolean isMonthlyFolderRetentionPolicy() {
+        return monthlyFolderRetentionPolicy;
+    }
+
+    public void setMonthlyFolderRetentionPolicy(boolean monthlyFolderRetentionPolicy) {
+        this.monthlyFolderRetentionPolicy = monthlyFolderRetentionPolicy;
     }
 }

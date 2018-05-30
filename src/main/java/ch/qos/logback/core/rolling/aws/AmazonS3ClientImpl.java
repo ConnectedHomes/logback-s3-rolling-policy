@@ -13,6 +13,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,6 +42,8 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
 
     private AmazonS3Client amazonS3Client;
     private final ExecutorService executor;
+    private AtomicReference<DateTime> previousCleanDate;
+    private boolean monthlyFolderRetentionPolicy;
 
     public AmazonS3ClientImpl(final String awsAccessKey, final  String awsSecretKey, final  String s3BucketName,
                               final String s3FolderName, final boolean prefixTimestamp,
@@ -57,6 +61,7 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
         amazonS3Client = null;
 
         identifier = prefixIdentifier ? IdentifierUtil.getIdentifier() : null;
+        previousCleanDate = new AtomicReference<>(DateTime.now());
     }
 
     public void uploadFileToS3Async(final String filename, final Date date) {
@@ -64,16 +69,7 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
     }
 
     public void uploadFileToS3Async(final String filename, final Date date, final boolean overrideTimestampSetting) {
-        if (amazonS3Client == null) {
-
-            // If the access and secret key is not specified then try to use other providers
-            if (getAwsAccessKey() == null || getAwsAccessKey().trim().isEmpty()) {
-                amazonS3Client = new AmazonS3Client();
-            } else {
-                final AWSCredentials cred = new BasicAWSCredentials(getAwsAccessKey(), getAwsSecretKey());
-                amazonS3Client = new AmazonS3Client(cred);
-            }
-        }
+        initAmazonS3Client();
 
         final File file = new File(filename);
 
@@ -107,19 +103,71 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
 
         // Queue thread to upload
         final Runnable uploader = () -> {
-
             try {
-                amazonS3Client.putObject(
+                final PutObjectRequest putObjectRequest =
                         new PutObjectRequest(getS3BucketName(), s3ObjectName.toString(), file)
-                                .withCannedAcl(CannedAccessControlList.BucketOwnerFullControl)
-                );
+                        .withCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
+
+                amazonS3Client.putObject(putObjectRequest);
             } catch (final Exception ex) {
-                log.warn("Cannot put request to queue");
-                ex.printStackTrace();
+                log.warn("Cannot put request to queue", ex);
             }
+            deleteFolderIfMonthExpired();
         };
 
         executor.execute(uploader);
+    }
+
+    private void initAmazonS3Client() {
+        if (amazonS3Client == null) {
+
+            // If the access and secret key is not specified then try to use other providers
+            if (getAwsAccessKey() == null || getAwsAccessKey().trim().isEmpty()) {
+                amazonS3Client = new AmazonS3Client();
+            } else {
+                final AWSCredentials cred = new BasicAWSCredentials(getAwsAccessKey(), getAwsSecretKey());
+                amazonS3Client = new AmazonS3Client(cred);
+            }
+        }
+    }
+
+    public void deleteFolderFromS3Async(final Date date) {
+        final StringBuffer s3FolderName = new StringBuffer();
+
+        if (getS3FolderName() != null) {
+            s3FolderName.append(format(getS3FolderName(), date));
+        }
+
+        //Extra custom S3 (runtime) folder?
+        if (CustomData.EXTRA_S3_FOLDER.get() != null) {
+            s3FolderName.append('/');
+            s3FolderName.append(CustomData.EXTRA_S3_FOLDER.get());
+        }
+
+        try {
+            amazonS3Client.deleteObject(getS3BucketName(), s3FolderName.toString());
+        } catch (final Exception ex) {
+            log.warn("Cannot delete request to queue", ex);
+        }
+
+    }
+
+    private void deleteFolderIfMonthExpired() {
+        if (!monthlyFolderRetentionPolicy) {
+            return;
+        }
+
+        final DateTime now = DateTime.now();
+        final DateTime previousDate = previousCleanDate.get();
+
+        if (now.getMonthOfYear() > previousDate.getMonthOfYear()) {
+            try {
+                deleteFolderFromS3Async(previousCleanDate.get().toDate());
+                previousCleanDate.set(now);
+            } catch (final Exception ex) {
+                log.warn("Cannot delete folder form S3", ex);
+            }
+        }
     }
 
     /**
@@ -181,5 +229,13 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
 
     public String getIdentifier() {
         return identifier;
+    }
+
+    public boolean isMonthlyFolderRetentionPolicy() {
+        return monthlyFolderRetentionPolicy;
+    }
+
+    public void setMonthlyFolderRetentionPolicy(boolean monthlyFolderRetentionPolicy) {
+        this.monthlyFolderRetentionPolicy = monthlyFolderRetentionPolicy;
     }
 }
