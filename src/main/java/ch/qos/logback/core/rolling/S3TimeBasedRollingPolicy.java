@@ -10,18 +10,12 @@ import ch.qos.logback.core.rolling.aws.AmazonS3ClientImpl;
 import ch.qos.logback.core.rolling.shutdown.RollingPolicyShutdownListener;
 import ch.qos.logback.core.rolling.shutdown.ShutdownHookType;
 import ch.qos.logback.core.rolling.shutdown.ShutdownHookUtil;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.lang.annotation.Retention;
 import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> implements RollingPolicyShutdownListener {
     private static final Logger log = LoggerFactory.getLogger(S3TimeBasedRollingPolicy.class);
