@@ -246,7 +246,7 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
         return monthlyFolderRetentionPolicy;
     }
 
-    public void setMonthlyFolderRetentionPolicy(boolean monthlyFolderRetentionPolicy) {
+    public void setMonthlyFolderRetentionPolicy(final boolean monthlyFolderRetentionPolicy) {
         this.monthlyFolderRetentionPolicy = monthlyFolderRetentionPolicy;
     }
 }
