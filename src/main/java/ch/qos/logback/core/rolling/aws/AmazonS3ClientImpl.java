@@ -11,8 +11,7 @@ import ch.qos.logback.core.rolling.util.IdentifierUtil;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.*;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,7 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,8 +41,8 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
 
     private AmazonS3Client amazonS3Client;
     private final ExecutorService executor;
-    private AtomicReference<DateTime> previousCleanDate;
     private boolean monthlyFolderRetentionPolicy;
+    private final ReentrantLock lock = new ReentrantLock();
 
     public AmazonS3ClientImpl(final String awsAccessKey, final  String awsSecretKey, final  String s3BucketName,
                               final String s3FolderName, final boolean prefixTimestamp,
@@ -61,7 +60,6 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
         amazonS3Client = null;
 
         identifier = prefixIdentifier ? IdentifierUtil.getIdentifier() : null;
-        previousCleanDate = new AtomicReference<>(DateTime.now());
     }
 
     public void uploadFileToS3Async(final String filename, final Date date) {
@@ -79,15 +77,7 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
         }
 
         //Build S3 path
-        final StringBuffer s3ObjectName = new StringBuffer();
-        if (getS3FolderName() != null) {
-            s3ObjectName.append(format(getS3FolderName(), date)).append('/');
-        }
-
-        //Extra custom S3 (runtime) folder?
-        if (CustomData.EXTRA_S3_FOLDER.get() != null) {
-            s3ObjectName.append(CustomData.EXTRA_S3_FOLDER.get()).append('/');
-        }
+        final StringBuffer s3ObjectName = new StringBuffer(getS3FolderName(date));
 
         //Add timestamp prefix if desired
         if (prefixTimestamp || overrideTimestampSetting) {
@@ -131,8 +121,19 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
         }
     }
 
-    public void deleteFolderFromS3Async(final Date date) {
-        final StringBuffer s3FolderName = new StringBuffer();
+    public void deleteFolderFromS3Async(final S3ObjectSummary objectSummary) {
+        try {
+            final DeleteObjectRequest deleteObjectRequest =
+                    new DeleteObjectRequest(objectSummary.getBucketName(), objectSummary.getKey());
+            amazonS3Client.deleteObject(deleteObjectRequest);
+        } catch (final Exception ex) {
+            log.warn("Cannot delete request to queue", ex);
+        }
+
+    }
+
+    private String getS3FolderName(Date date) {
+        final StringBuilder s3FolderName = new StringBuilder();
 
         if (getS3FolderName() != null) {
             s3FolderName.append(format(getS3FolderName(), date));
@@ -143,30 +144,33 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
             s3FolderName.append('/');
             s3FolderName.append(CustomData.EXTRA_S3_FOLDER.get());
         }
-
-        try {
-            amazonS3Client.deleteObject(getS3BucketName(), s3FolderName.toString());
-        } catch (final Exception ex) {
-            log.warn("Cannot delete request to queue", ex);
-        }
-
+        return s3FolderName.append('/').toString();
     }
 
     private void deleteFolderIfMonthExpired() {
         if (!monthlyFolderRetentionPolicy) {
             return;
         }
+        try {
+            lock.lock();
 
-        final DateTime now = DateTime.now();
-        final DateTime previousDate = previousCleanDate.get();
+            final DateTime now = DateTime.now();
+            final String s3FolderName = getS3FolderName(now.minusMonths(1).toDate());
+            final ObjectListing listing = this.amazonS3Client.listObjects(getS3BucketName(), s3FolderName);
 
-        if (now.getMonthOfYear() > previousDate.getMonthOfYear()) {
-            try {
-                deleteFolderFromS3Async(previousCleanDate.get().toDate());
-                previousCleanDate.set(now);
-            } catch (final Exception ex) {
-                log.warn("Cannot delete folder form S3", ex);
+            if (listing == null || listing.getObjectSummaries().isEmpty()) {
+                return;
             }
+
+
+
+            for (final S3ObjectSummary objectSummary : listing.getObjectSummaries()) {
+                deleteFolderFromS3Async(objectSummary);
+            }
+        } catch (final Exception ex) {
+            log.warn("Cannot delete folder form S3", ex);
+        } finally {
+            lock.unlock();
         }
     }
 
