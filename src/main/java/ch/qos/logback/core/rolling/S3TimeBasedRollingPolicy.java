@@ -58,6 +58,7 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
         //Init S3 client
         s3Client = new AmazonS3ClientImpl(getAwsAccessKey(), getAwsSecretKey(), getS3BucketName(), getS3FolderName(), isPrefixTimestamp(),
                 isPrefixIdentifier());
+        s3Client.setMonthlyFolderRetentionPolicy(isMonthlyFolderRetentionPolicy());
 
         if (isPrefixIdentifier()) {
             addInfo("Using identifier prefix \"" + s3Client.getIdentifier() + "\"");
