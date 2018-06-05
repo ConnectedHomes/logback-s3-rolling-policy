@@ -28,7 +28,6 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
     private boolean rolloverOnExit;
     private boolean prefixTimestamp;
     private boolean prefixIdentifier;
-    private boolean monthlyFolderRetentionPolicy;
 
     private AmazonS3ClientImpl s3Client;
     private final ExecutorService executor;
@@ -58,7 +57,6 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
         //Init S3 client
         s3Client = new AmazonS3ClientImpl(getAwsAccessKey(), getAwsSecretKey(), getS3BucketName(), getS3FolderName(), isPrefixTimestamp(),
                 isPrefixIdentifier());
-        s3Client.setMonthlyFolderRetentionPolicy(isMonthlyFolderRetentionPolicy());
 
         if (isPrefixIdentifier()) {
             addInfo("Using identifier prefix \"" + s3Client.getIdentifier() + "\"");
@@ -242,12 +240,4 @@ public class S3TimeBasedRollingPolicy<E> extends TimeBasedRollingPolicy<E> imple
         this.prefixIdentifier = prefixIdentifier;
     }
 
-
-    public boolean isMonthlyFolderRetentionPolicy() {
-        return monthlyFolderRetentionPolicy;
-    }
-
-    public void setMonthlyFolderRetentionPolicy(final boolean monthlyFolderRetentionPolicy) {
-        this.monthlyFolderRetentionPolicy = monthlyFolderRetentionPolicy;
-    }
 }
