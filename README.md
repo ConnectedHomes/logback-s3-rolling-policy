@@ -144,7 +144,7 @@ Libraries
 ---------
 
 This project uses the following libraries:
-* `com.amazonaws:aws-java-sdk:1.12.261`
+* `com.amazonaws:aws-java-sdk:1.12.688`
 * `ch.qos.logback:logback-classic:1.4.14`
 * `com.google.guava:guava:33.1.0-jre`
 * `jakarta.servlet:jakarta.servlet-ap:6.0.0` (scope provided)
