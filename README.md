@@ -24,7 +24,7 @@ Index
 Requirements
 ------------
 
-* Java 1.7+
+* Java 17
 
 Configuration
 -------------
@@ -144,8 +144,8 @@ Libraries
 ---------
 
 This project uses the following libraries:
-* `com.amazonaws:aws-java-sdk:1.11.7`
-* `ch.qos.logback:logback-classic:1.2.3`
-* `com.google.guava:guava:18.0`
-* `javax.servlet:servlet-api:2.4` (scope provided)
+* `com.amazonaws:aws-java-sdk:1.12.688`
+* `ch.qos.logback:logback-classic:1.4.14`
+* `com.google.guava:guava:33.1.0-jre`
+* `jakarta.servlet:jakarta.servlet-ap:6.0.0` (scope provided)
 * `org.jetbrains:annotations:15.0` (scope provided)

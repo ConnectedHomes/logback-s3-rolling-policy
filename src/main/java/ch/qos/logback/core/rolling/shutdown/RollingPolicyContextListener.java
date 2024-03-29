@@ -6,9 +6,10 @@
 package ch.qos.logback.core.rolling.shutdown;
 
 import com.google.common.collect.Lists;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+
 import java.util.List;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 public class RollingPolicyContextListener implements ServletContextListener {
 
