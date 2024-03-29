@@ -68,7 +68,7 @@ public class IdentifierUtil {
 
             final String body = new String(baos.toByteArray(), encoding);
 
-            if (!body.trim().isEmpty()) {
+            if (!body.isBlank()) {
                 return body.trim();
             }
         } catch (Exception e) {
@@ -86,7 +86,7 @@ public class IdentifierUtil {
                 hostname = hostname.replaceAll("[^a-zA-Z0-9.]+", "").trim();
             }
 
-            if (hostname != null && hostname.length() > 0) {
+            if (hostname != null && !hostname.isEmpty()) {
                 return hostname;
             }
         } catch (Exception e) {

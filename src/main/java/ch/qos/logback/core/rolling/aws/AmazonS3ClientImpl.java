@@ -9,8 +9,10 @@ import ch.qos.logback.core.rolling.data.CustomData;
 import ch.qos.logback.core.rolling.shutdown.RollingPolicyShutdownListener;
 import ch.qos.logback.core.rolling.util.IdentifierUtil;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.slf4j.Logger;
@@ -38,10 +40,10 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
 
     private final String identifier;
 
-    private AmazonS3Client amazonS3Client;
+    private AmazonS3 amazonS3Client;
     private final ExecutorService executor;
 
-    public AmazonS3ClientImpl(final String awsAccessKey, final  String awsSecretKey, final  String s3BucketName,
+    public AmazonS3ClientImpl(final String awsAccessKey, final String awsSecretKey, final String s3BucketName,
                               final String s3FolderName, final boolean prefixTimestamp,
                               final boolean prefixIdentifier) {
 
@@ -101,7 +103,7 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
             try {
                 final PutObjectRequest putObjectRequest =
                         new PutObjectRequest(getS3BucketName(), s3ObjectName.toString(), file)
-                        .withCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
+                                .withCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
 
                 amazonS3Client.putObject(putObjectRequest);
             } catch (final Exception ex) {
@@ -118,11 +120,14 @@ public class AmazonS3ClientImpl implements RollingPolicyShutdownListener {
         }
 
         // If the access and secret key is not specified then try to use other providers
-        if (getAwsAccessKey() == null || getAwsAccessKey().trim().isEmpty()) {
-            amazonS3Client = new AmazonS3Client();
+        if (getAwsAccessKey() == null || getAwsAccessKey().isBlank()) {
+            amazonS3Client = AmazonS3ClientBuilder.defaultClient();
         } else {
-            final AWSCredentials cred = new BasicAWSCredentials(getAwsAccessKey(), getAwsSecretKey());
-            amazonS3Client = new AmazonS3Client(cred);
+            final AWSCredentials creds = new BasicAWSCredentials(getAwsAccessKey(), getAwsSecretKey());
+            amazonS3Client = AmazonS3ClientBuilder
+                    .standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(creds))
+                    .build();
         }
     }
 
