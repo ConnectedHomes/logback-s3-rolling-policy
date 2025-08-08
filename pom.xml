@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.alertme.zoo.shared</groupId>
         <artifactId>zoo-parent</artifactId>
-        <version>1.0-b66</version>
+        <version>1.1-b71</version>
     </parent>
 
     <!-- PROJECT METADATA -->
@@ -25,17 +25,20 @@
     </scm>
 
     <properties>
-        <distribution.repo.id>${honeycomb.repo.id}</distribution.repo.id>
-        <distribution.repo.url>${honeycomb.repo.url}</distribution.repo.url>
+        <java.version>17</java.version>
+
+        <distribution.repo.id>${plat.repo.id}</distribution.repo.id>
+        <distribution.repo.url>${plat.repo.url}</distribution.repo.url>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <java.version>17</java.version>
-        <aws-java-sdk.version>1.12.688</aws-java-sdk.version>
-        <logback.version>1.4.14</logback.version>
+        <findbugs.exclude.file>./findbugs-exclude.xml</findbugs.exclude.file>
+
+        <aws-java-sdk.version>1.12.788</aws-java-sdk.version>
+        <logback.version>1.5.18</logback.version>
         <jakarta-servlet.version>6.0.0</jakarta-servlet.version>
-        <google-guava.version>33.1.0-jre</google-guava.version>
-        <slf4j.version>2.0.12</slf4j.version>
+        <google-guava.version>33.4.0-jre</google-guava.version>
+        <slf4j.version>2.0.17</slf4j.version>
     </properties>
 
     <dependencies>
