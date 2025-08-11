@@ -1,0 +1,32 @@
+<FindBugsFilter>
+    <Match>
+        <!-- These are utility classes throwing `Not implemented` exception intentionally  -->
+        <And>
+            <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+            <Or>
+                <Class name="ch.qos.logback.core.rolling.data.CustomData"/>
+                <Class name="ch.qos.logback.core.rolling.shutdown.ShutdownHookUtil"/>
+                <Class name="ch.qos.logback.core.rolling.util.IdentifierUtil"/>
+            </Or>
+        </And>
+    </Match>
+
+    <Match>
+        <!--
+            Findbugs complains about fields not initialized in constructor.
+            `s3Client` is initialized lazily in `start()` method.
+        -->
+        <And>
+            <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+            <Class name="ch.qos.logback.core.rolling.S3FixedWindowRollingPolicy"/>
+        </And>
+    </Match>
+
+    <Match>
+        <!-- Catching `Exception` intentionally -->
+        <And>
+            <Bug pattern="REC_CATCH_EXCEPTION"/>
+            <Class name="ch.qos.logback.core.rolling.util.IdentifierUtil"/>
+        </And>
+    </Match>
+</FindBugsFilter>
